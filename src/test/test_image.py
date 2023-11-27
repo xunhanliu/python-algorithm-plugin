@@ -13,21 +13,21 @@
 
 # -*- coding: UTF-8 -*-
 
+import json
 import logging
 import os
+from concurrent.futures import ThreadPoolExecutor, wait
 
 import pytest
 import requests
-import json
-from concurrent.futures import ThreadPoolExecutor, wait
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 
 ip_db = "127.0.0.1:4101"
 ip_data = "127.0.0.1:4101"
-db_name = "test_vector_db"
-space_name = "vector_space"
+db_name = "test"
+space_name = "test"
 fileData = "data/test_data.json"
 headers = {"content-type": "application/json"}
 plugin_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -94,63 +94,19 @@ def test_dbspace():
 def test_createspace():
     url = "http://" + ip_db + "/space/" + db_name + "/_create"
     headers = {"content-type": "application/json"}
-    data = {
-        "name": space_name,
-        "dynamic_schema": "strict",
-        "partition_num": 1,  # "partition_num": 2-6之间
-        "replica_num": 1,
-        "engine": {"name": "gamma", "index_size": 9999, "max_size": 100000},
-        "properties": {
-            "string": {
-                "type": "keyword",
-                "index": "true"
-            },
-            "int": {
-                "type": "integer",
-                "index": "true"
-            },
-            "float": {
-                "type": "float",
-                "index": "true"
-            },
-            "vector1": {
-                "type": "vector",
-                "model_id": "img",
-                "dimension": 512,
-                "format": "normalization"
-            },
-            "vector2": {
-                "type": "vector",
-                "model_id": "text",
-                "dimension": 768,
-                "format": "normalization"
-            },
-            "string_tags": {
-                "type": "string",
-                "array": True,
-                "index": "true"
-            },
-            "int_tags": {
-                "type": "integer",
-                "array": True,
-                "index": "true"
-            },
-            "float_tags": {
-                "type": "float",
-                "array": True,
-                "index": "true"
-            }
-        },
-        "models": [{
-            "model_id": "vgg16",
-            "fields": ["string"],
-            "out": "feature"
-        }]
-    }
+    data = {"name": space_name, "partition_num": 1, "replica_num": 1,
+            "engine": {"name": "gamma", "index_size": 70000, "max_size": 10000000, "id_type": "String",
+                       "retrieval_type": "IVFPQ",
+                       "retrieval_param": {"metric_type": "InnerProduct", "ncentroids": 256, "nsubvector": 32}},
+            "properties": {"url": {"type": "keyword", "index": True},
+                           "feature1": {"type": "vector", "dimension": 512, "format": "normalization"}}}
+
     print(url + "---" + json.dumps(data))
     response = requests.put(url, headers=headers, data=json.dumps(data))
     print("space_create---\n" + response.text)
     assert response.status_code == 200
+
+
 
 
 def test_space():
@@ -168,12 +124,14 @@ def test_insertWithId():
 
     def multi(filename):
         file_path = os.path.join(image_path, filename)
-        data = dict(string=file_path, vector1=dict(feature=file_path))
+        file_url="http://127.0.0.1:4102/static-test-image/"+filename
+        data = dict({ "url": file_url, "feature1":{"feature":file_url}})
         idx = os.path.splitext(filename)[0]
         url = "http://" + ip_data + "/" + db_name + "/" + space_name + "/" + idx
         response = requests.post(url, headers=headers, data=json.dumps(data))
         print("insertWithID:" + response.text)
         assert response.status_code == 200 and response.json()['status'] == 200
+
     with ThreadPoolExecutor(20) as pool:
         futures = [pool.submit(multi, filename) for filename in os.listdir(image_path)]
     wait(futures)
@@ -199,6 +157,7 @@ def test_insterNoId():
         response = requests.post(url, headers=headers, data=json.dumps(data))
         print("insertWithNOID:" + response.text)
         assert response.status_code == 200 and response.json()['status'] == 201
+
     with ThreadPoolExecutor(20) as pool:
         futures = [pool.submit(multi, filename) for filename in os.listdir(image_path)]
     wait(futures)
@@ -245,5 +204,3 @@ def test_deleteDB():
     response = requests.delete(url)
     print("deleteDB:" + response.text)
     assert response.status_code == 200
-
-

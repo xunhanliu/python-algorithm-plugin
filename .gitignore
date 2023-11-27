@@ -6,4 +6,5 @@ __pycache__/
 #skip some test file
 model/
 src/log/
-
+.idea
+src/static/images

@@ -24,6 +24,9 @@ resource_path = os.path.join(
     os.path.dirname((os.path.abspath(__file__))),
     "static")
 
+test_image_source = os.path.join(
+    os.sep.join(os.path.dirname((os.path.abspath(__file__))).split(os.sep)[:-1]),
+    "images","image_retrieval","test")
 
 class ImageShowHandler(tornado.web.RequestHandler):
     """tornado service"""
@@ -53,7 +56,7 @@ class ImageShowHandler(tornado.web.RequestHandler):
         search_list = []
         for hit in result['hits']['hits']:
             source = hit.pop("_source")
-            source["score"] = hit["_extra"]["vector_result"][0]["score"]
+            source["score"] = hit["_score"]
             search_list.append(source)
         return search_list
 
@@ -61,7 +64,8 @@ class ImageShowHandler(tornado.web.RequestHandler):
     def search_similar(image_path):
         """"""
         headers = {"content-type": "application/json"}
-        data = {"imageurl": image_path, "size": args.num}
+        data={"query": {"sum": [{"feature": image_path, "field": "feature1"}]},"is_brute_search": 1}
+        # data = {"imageurl": image_path, "size": args.num}
         ip = f"http://{args.ip}/{args.db}/{args.space}/_search"
         response = requests.post(ip, headers=headers, data = json.dumps(data))
         result = json.loads(response.text)
@@ -78,6 +82,7 @@ def main():
         (r"/*", MainHandler),
         (r'/static/vdb/search', ImageShowHandler),
         (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": resource_path}),
+        (r"/static-test-image/(.*)", tornado.web.StaticFileHandler, {"path": test_image_source}),
         ])
     sockets = tornado.netutil.bind_sockets(args.port)
     server = tornado.httpserver.HTTPServer(app)

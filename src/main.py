@@ -20,7 +20,6 @@ Options:
 
 import os
 import json
-import queue
 import time
 import signal
 import requests
@@ -65,7 +64,7 @@ class PackageProcess(Process):
         self.debug = debug
         self.input_queue = input_queue
         self.output_queue = output_queue
-        self.watch_queue = queue.Queue()   # thread queue for performance
+        self.watch_queue = Queue()   # thread queue for performance
 
     def build(self):
         """Initialization process environment.
@@ -145,6 +144,7 @@ class PackageProcess(Process):
             for d in data['query']['sum']:
                 if not isinstance(d['feature'], list):
                     flag = True
+                    print(util.normlize(self.model.encode(d['feature'])))
                     d['feature'] = util.normlize(self.model.encode(d['feature']))
         elif operate == '_msearch':
             raise NotImplementedError('This API do not support msearch operate')

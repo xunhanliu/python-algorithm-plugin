@@ -41,7 +41,7 @@
 		var data = jsonData["sim_url"]
 		var str = "<ul class=\"imgList clearfix\">"
 		for (var i = 0, l = data.length; i < l; i++){
-                    str = str + "<li><div class='imgWrapper'><img src=" + data[i]["imageurl"] + "></div><p>score: "+data[i]["score"]+"</p></li>";
+                    str = str + "<li><div class='imgWrapper'><img src=" + data[i]["url"] + "></div><p>score: "+data[i]["score"]+"</p></li>";
 		}
 		str = str + "</ul>"
 		$("#tabinfo2").html(str)

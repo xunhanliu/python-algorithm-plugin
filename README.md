@@ -1,3 +1,6 @@
+#关于版本
+对应docker vearch3.4.1
+
 # Quickstart
 
 *This  Quickstart suit for those who want to search something but do not know how to extract image or text to features. Others refer to [APILowLevel.md](APILowLevel.md) .* 

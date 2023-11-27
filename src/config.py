@@ -17,8 +17,8 @@ root_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 port = 4101
 gpus = '-1'
-master_address = 'http://127.0.0.1:8817'
-router_address = 'http://127.0.0.1:9001'
+master_address = 'http://192.168.6.153:8817'
+router_address = 'http://192.168.6.153:9002'
 
 face_config = dict(modelname='face_retrieval.face',
                    model_path=os.path.join(root_path, 'model', '20180402-114759'))
